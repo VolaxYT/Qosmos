@@ -1,5 +1,6 @@
 #include "config.h"
 #include "triangle_mesh.h"
+#include "material.h"
 
 unsigned int make_module(const std::string& filepath, unsigned int module_type){
     std::ifstream file;
@@ -59,6 +60,7 @@ unsigned int make_shader(const std::string& vertex_filepath, const std::string& 
 
 int main(){
     GLFWwindow* window;
+    float screenWidth = 640.0f, screenHeight = 480.0f;
 
     if(!glfwInit()){
         std::cout << "GLFW couldn't load" << std::endl;
@@ -69,7 +71,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(640, 480, "Qosmos Window", NULL, NULL);
+    window = glfwCreateWindow(screenWidth, screenHeight, "Qosmos Window", NULL, NULL);
     glfwMakeContextCurrent(window);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
@@ -78,28 +80,55 @@ int main(){
         return -1;
     }
 
-    glClearColor(0.25f, 0.5f, 0.75f, 1.0f);
+    std::vector<float> color = normalize_rgb(243, 249, 255);
+    glClearColor(color[0], color[1],color[2], 1.0f);
     int w,h;
     glfwGetFramebufferSize(window, &w, &h);
     glViewport(0,0,w,h);
+    glEnable(GL_DEPTH_TEST);
 
     TriangleMesh* triangle = new TriangleMesh();
+    Material* material = new Material("../img/img1.jpg");
 
     unsigned int shader = make_shader(
         "../src/shaders/vertex.txt",
         "../src/shaders/fragment.txt"
     );
 
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(130.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(-0.0f, 0.0f, -3.0f));
+
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight, 0.1f, 100.0f);
+
     while(!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(shader);
+        material->use();
         triangle->draw();
+
+        float angle = 1.0f; 
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        unsigned int modelLoc = glGetUniformLocation(shader, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+        unsigned int viewLoc = glGetUniformLocation(shader, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        unsigned int projectionLoc = glGetUniformLocation(shader, "projection");
+        glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
+
         glfwSwapBuffers(window);
     }
 
     glDeleteProgram(shader);
+    delete triangle;
+    delete material;
     glfwTerminate();
     return 0;
 }

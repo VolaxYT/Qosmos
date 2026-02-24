@@ -7,13 +7,16 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
-
 add_executable(qosmos 
     src/config.h 
+    src/config.cpp
     src/main.cpp 
     src/glad.c
+    src/stb_image.h
     src/triangle_mesh.h
     src/triangle_mesh.cpp
+    src/material.h
+    src/material.cpp
 )
 
 target_include_directories(qosmos PRIVATE dependencies)
