@@ -71,7 +71,7 @@ unsigned int make_shader(const std::string& vert, const std::string& frag){
     return prog;
 }
 
-int main(){
+int main(int argc, char* argv[]){
     if(!glfwInit()){
         std::cerr << "Erreur : GLFW init failed" << std::endl;
         return -1;
@@ -113,8 +113,15 @@ int main(){
 
     // Shaders
     // Deux programmes séparés : les axes n'ont pas besoin de gl_PointSize ni de gl_PointCoord
-    unsigned int shader_points = make_shader("../src/shaders/vertex.glsl", "../src/shaders/fragment.glsl");
-    unsigned int shader_axes = make_shader("../src/shaders/vertex_axes.glsl", "../src/shaders/fragment_axes.glsl");
+    std::string base = std::filesystem::canonical(std::filesystem::path(argv[0]).parent_path()).string();
+    unsigned int shader_points = make_shader(
+        base + "/shaders/vertex.glsl",
+        base + "/shaders/fragment.glsl"
+    );
+    unsigned int shader_axes = make_shader(
+        base + "/shaders/vertex_axes.glsl",
+        base + "/shaders/fragment_axes.glsl"
+    );
 
     Axes axes;
     PointCloud cloud;
