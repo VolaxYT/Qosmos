@@ -1,16 +1,12 @@
 #pragma once
 #include "config.h"
 
+// Caméra orbitale — tourne autour de l'origine en coordonnées sphériques (r, theta, phi)
+// theta : angle polaire (vertical), phi : angle azimutal (horizontal)
 class Camera {
     public:
-    float radius;
-    float theta; // rotation verticale
-    float phi; // rotation horizontale
-
-    float fov;
-    float aspectRatio;
-    float nearPlane;
-    float farPlane;
+    float radius, theta, phi;
+    float fov, aspectRatio, nearPlane, farPlane;
 
     bool dragging;
     double lastX, lastY;
@@ -28,6 +24,7 @@ class Camera {
         autoRotate(false), autoRotateSpeed(0.0002f)
     {}
 
+    // Position cartésienne de la caméra sur la sphère de rayon radius
     glm::vec3 getPosition() {
         return glm::vec3(
             radius * sin(theta) * cos(phi),
@@ -36,14 +33,16 @@ class Camera {
         );
     }
 
+    // Matrice view, oriente la scène pour que la caméra regarde l'origine
     glm::mat4 getView() {
         return glm::lookAt(
             getPosition(),
-            glm::vec3(0.0f),        // regarde toujours l'origine
+            glm::vec3(0.0f),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
     }
 
+    // Matrice de projection perspective
     glm::mat4 getProjection() {
         return glm::perspective(
             glm::radians(fov),
@@ -53,6 +52,7 @@ class Camera {
         );
     }
 
+    // Rotation automatique de la caméra
     void update(){
         if(autoRotate) {
             phi += autoRotateSpeed;
@@ -72,7 +72,8 @@ class Camera {
             float dy = (float)(ypos - lastY);
             phi   -= dx * sensitivity;
             theta -= dy * sensitivity;
-            theta = glm::clamp(theta, 0.05f, glm::pi<float>() - 0.05f); // pour éviter le gimbal lock
+            // theta clampé loin des pôles pour éviter le gimbal lock
+            theta = glm::clamp(theta, 0.05f, glm::pi<float>() - 0.05f);
         }
         lastX = xpos;
         lastY = ypos;

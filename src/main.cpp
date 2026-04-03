@@ -5,6 +5,7 @@
 #include "quantum.h"
 #include "sampler.h"
 
+// Pointeur global nécessaire pour accéder à la caméra depuis les callbacks GLFW
 Camera* g_camera = nullptr;
 
 void mouse_button_callback(GLFWwindow*, int button, int action, int){
@@ -17,7 +18,7 @@ void scroll_callback(GLFWwindow*, double x, double y){
     if(g_camera) g_camera->onScroll(y);
 }
 
-// --- Compilation shader ---
+// Charge et compile un shader depuis un fichier
 unsigned int make_module(const std::string& filepath, unsigned int type){
     std::ifstream file(filepath);
     if(!file.is_open())
@@ -27,7 +28,7 @@ unsigned int make_module(const std::string& filepath, unsigned int type){
     ss << file.rdbuf();
     std::string src = ss.str();
 
-    // DEBUG — affiche le contenu lu
+    // DEBUG
     //std::cerr << "=== Shader lu : " << filepath << " ===" << std::endl;
     //std::cerr << src << std::endl;
     //std::cerr << "=== Fin ===" << std::endl;
@@ -48,6 +49,7 @@ unsigned int make_module(const std::string& filepath, unsigned int type){
     return mod;
 }
 
+// Lie un vertex shader et un fragment shader en un programme GPU
 unsigned int make_shader(const std::string& vert, const std::string& frag){
     unsigned int vs = make_module(vert, GL_VERTEX_SHADER);
     unsigned int fs = make_module(frag, GL_FRAGMENT_SHADER);
@@ -68,8 +70,6 @@ unsigned int make_shader(const std::string& vert, const std::string& frag){
     glDeleteShader(fs);
     return prog;
 }
-
-
 
 int main(){
     if(!glfwInit()){
@@ -100,24 +100,21 @@ int main(){
     glfwGetFramebufferSize(window, &fw, &fh);
     glViewport(0, 0, fw, fh);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glEnable(GL_PROGRAM_POINT_SIZE); // autorise gl_PointSize dans le vertex shader
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // blend additif — les zones denses s'accumulent
     glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
 
+    // Caméra et callbacks souris
     Camera camera(W / H);
     g_camera = &camera;
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetCursorPosCallback(window, cursor_pos_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    unsigned int shader_points = make_shader(
-    "../src/shaders/vertex.glsl",
-    "../src/shaders/fragment.glsl"
-    );
-    unsigned int shader_axes = make_shader(
-        "../src/shaders/vertex_axes.glsl",
-        "../src/shaders/fragment_axes.glsl"
-    );
+    // Shaders
+    // Deux programmes séparés : les axes n'ont pas besoin de gl_PointSize ni de gl_PointCoord
+    unsigned int shader_points = make_shader("../src/shaders/vertex.glsl", "../src/shaders/fragment.glsl");
+    unsigned int shader_axes = make_shader("../src/shaders/vertex_axes.glsl", "../src/shaders/fragment_axes.glsl");
 
     Axes axes;
     PointCloud cloud;
@@ -134,6 +131,7 @@ int main(){
     Sampler::generate(n, l, m, N, positions, colors, alphas);
     cloud.upload(positions, colors, alphas);
 
+    // Boucle principale
     while(!glfwWindowShouldClose(window)){
         glfwPollEvents();
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -141,6 +139,7 @@ int main(){
 
         camera.update();
 
+        // Touche R — active/désactive la rotation automatique
         static int prev_r = GLFW_RELEASE;
         int cur_r = glfwGetKey(window, GLFW_KEY_R);
         if(cur_r == GLFW_PRESS && prev_r == GLFW_RELEASE)
@@ -152,52 +151,47 @@ int main(){
         glm::mat4 view = camera.getView();
         glm::mat4 proj = camera.getProjection();
 
-        // --- Points ---
+        // Points
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
         glUseProgram(shader_points);
-        glUniformMatrix4fv(glGetUniformLocation(shader_points, "view"),
-            1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(shader_points, "projection"),
-            1, GL_FALSE, glm::value_ptr(proj));
+        glUniformMatrix4fv(glGetUniformLocation(shader_points, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader_points, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
         cloud.draw();
 
-        // --- Axes ---
+        // Axes
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
         glClear(GL_DEPTH_BUFFER_BIT);
         glUseProgram(shader_axes);
-        glUniformMatrix4fv(glGetUniformLocation(shader_axes, "view"),
-            1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(shader_axes, "projection"),
-            1, GL_FALSE, glm::value_ptr(proj));
+        glUniformMatrix4fv(glGetUniformLocation(shader_axes, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader_axes, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
         //axes.draw();
 
+        // Régénération du nuage si l'orbitale a changé
         if(need_regen){
             positions.clear(); colors.clear(); alphas.clear();
             Sampler::generate(n, l, m, N, positions, colors, alphas);
             cloud.upload(positions, colors, alphas);
             // Met à jour le titre de la fenêtre
-            std::string title = "Qosmos — n=" + std::to_string(n)
-                            + " l=" + std::to_string(l)
-                            + " m=" + std::to_string(m);
+            std::string title = "Qosmos — n=" + std::to_string(n) + " l=" + std::to_string(l) + " m=" + std::to_string(m);
             glfwSetWindowTitle(window, title.c_str());
             need_regen = false;
         }
 
         // Gestion clavier — détection sur front montant
-        static int prev_up    = GLFW_RELEASE;
-        static int prev_down  = GLFW_RELEASE;
-        static int prev_left  = GLFW_RELEASE;
+        static int prev_up = GLFW_RELEASE;
+        static int prev_down = GLFW_RELEASE;
+        static int prev_left = GLFW_RELEASE;
         static int prev_right = GLFW_RELEASE;
-        static int prev_u     = GLFW_RELEASE;
+        static int prev_u = GLFW_RELEASE;
         static int prev_d_key = GLFW_RELEASE;
 
-        int cur_up    = glfwGetKey(window, GLFW_KEY_UP);
-        int cur_down  = glfwGetKey(window, GLFW_KEY_DOWN);
-        int cur_left  = glfwGetKey(window, GLFW_KEY_LEFT);
+        int cur_up = glfwGetKey(window, GLFW_KEY_UP);
+        int cur_down = glfwGetKey(window, GLFW_KEY_DOWN);
+        int cur_left = glfwGetKey(window, GLFW_KEY_LEFT);
         int cur_right = glfwGetKey(window, GLFW_KEY_RIGHT);
-        int cur_u     = glfwGetKey(window, GLFW_KEY_U);
+        int cur_u = glfwGetKey(window, GLFW_KEY_U);
         int cur_d_key = glfwGetKey(window, GLFW_KEY_D);
 
         // Flèche HAUT/BAS — change n

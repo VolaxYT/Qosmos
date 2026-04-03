@@ -1,18 +1,20 @@
 #pragma once
 #include "config.h"
 
+// Axes cartésiens X (rouge), Y (vert), Z (bleu)
+// chaque axe = segment de l'origine jusqu'à 10 unités
 class Axes {
 public:
     Axes(){
         // format : x,y,z, r,g,b, a 
         float data[] = {
-            // X rouge
+            // X
             0.0f, 0.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f,
             10.0f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f,
-            // Y vert
+            // Y
             0.0f, 0.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f,
             0.0f, 10.0f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f,
-            // Z bleu
+            // Z
             0.0f, 0.0f, 0.0f,   0.0f, 0.5f, 1.0f,   1.0f,
             0.0f, 0.0f, 10.0f,  0.0f, 0.5f, 1.0f,   1.0f,
         };
@@ -25,18 +27,15 @@ public:
         glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
         // location 0 — position
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-            7 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
 
-        // location 1 — couleur RGB
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-            7 * sizeof(float), (void*)(3 * sizeof(float)));
+        // location 1 — RGB
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
 
         // location 2 — alpha
-        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE,
-            7 * sizeof(float), (void*)(6 * sizeof(float)));
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(6 * sizeof(float)));
         glEnableVertexAttribArray(2);
 
         glBindVertexArray(0);
