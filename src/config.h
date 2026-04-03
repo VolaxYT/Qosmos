@@ -1,16 +1,19 @@
 #pragma once
-#include <iostream>
+
+// OpenGL / GLFW
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+// Mathématiques
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// STL
 #include <iostream>
-#include <sstream>
 #include <fstream>
+#include <sstream>
 #include <string>
-
 #include <vector>
-
-std::vector<float> normalize_rgb(int red, int green, int blue);
+#include <cmath>
+#include <stdexcept>
