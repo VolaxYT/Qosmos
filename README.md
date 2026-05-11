@@ -443,18 +443,19 @@ Le titre de la fenêtre affiche en permanence l'orbitale courante : `Qosmos — 
 ## 14. Galerie des orbitales
 
 ### Orbitales s ($l = 0$)
-!(/img/s.png)
+![](/img/s.png)
 
 ---
 
 ### Orbitales p ($l = 1$)
-
+![](/img/p.png)
 
 ---
 
 ### Orbitales d ($l = 2$)
-
+![](/img/d.png)
 
 ---
 
 ### Orbitales f ($l = 3$)
+![](/img/f.png)
