@@ -443,30 +443,18 @@ Le titre de la fenêtre affiche en permanence l'orbitale courante : `Qosmos — 
 ## 14. Galerie des orbitales
 
 ### Orbitales s ($l = 0$)
-
-<!-- GIF 1s ici -->
-<!-- GIF 2s ici -->
-<!-- GIF 3s ici -->
+!(/img/s.png)
 
 ---
 
 ### Orbitales p ($l = 1$)
 
-<!-- GIF 2p_z ici -->
-<!-- GIF 2p_x ici -->
-<!-- GIF 2p_y ici -->
 
 ---
 
 ### Orbitales d ($l = 2$)
 
-<!-- GIF 3d_z2 ici -->
-<!-- GIF 3d_xz ici -->
-<!-- GIF 3d_x2y2 ici -->
-<!-- GIF 3d_xy ici -->
 
 ---
 
 ### Orbitales f ($l = 3$)
-
-<!-- GIF 4f ici -->
